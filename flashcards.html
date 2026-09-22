@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FlashCards">
+<title>FlashCards</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&display=swap');
+
+:root {
+  --bg: #F4EFE3;
+  --bg2: #FFFFFF;
+  --bg3: #E9E1CC;
+  --ink: #1A1A1A;
+
+  --red: #D7263D;
+  --red-dim: #A11B2C;
+  --red-tint: #F6D3D8;
+
+  --yellow: #FFD100;
+  --yellow-dim: #D1A800;
+  --yellow-tint: #FFF0AD;
+
+  --blue: #1B4F9C;
+  --blue-dim: #123A73;
+  --blue-tint: #DAE4F3;
+
+  --green: #5C7A42;
+  --green-dim: #435A2F;
+  --green-tint: #DCE6D0;
+
+  --border: #1A1A1A;
+}
+
+* {
+  margin:0; padding:0; box-sizing:border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 2.2rem 1.1rem 3.5rem;
+  overscroll-behavior: none;
+}
+
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    radial-gradient(circle at 90% 4%, var(--red) 0 46px, transparent 47px),
+    radial-gradient(circle at 90% 4%, transparent 0 60px, var(--yellow) 61px, transparent 100px),
+    linear-gradient(135deg, var(--blue) 0 100%);
+  background-position: 0 0, 0 0, -12% 96%;
+  background-size: 100% 100%, 100% 100%, 220px 220px;
+  background-repeat: no-repeat;
+  opacity: 0.13;
+  pointer-events:none; z-index:0;
+}
+
+.header { text-align: center; margin-bottom: 1.3rem; z-index: 1; }
+.label-top { font-weight: 800; letter-spacing: 0.24em; font-size: 1.3rem; text-transform: uppercase; margin-bottom: 0.3rem; }
+.label-top .l-flash { color: var(--yellow-dim); }
+.label-top .l-cards { color: var(--blue); }
+.label-sub { font-size: 0.58rem; letter-spacing: 0.28em; color: rgba(26,26,26,0.42); text-transform: uppercase; }
+.bauhaus-mark { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.7rem; }
+.mark-circle { width: 16px; height: 16px; border-radius: 50%; background: var(--red); }
+.mark-square { width: 14px; height: 14px; background: var(--yellow); transform: rotate(45deg); }
+.mark-triangle { width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 16px solid var(--blue); }
+
+.app-wrap { z-index: 1; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 1rem; }
+
+.screen { display: none; flex-direction: column; gap: 1rem; }
+.screen.active { display: flex; }
+
+.section-heading { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(26,26,26,0.45); margin: 0.1rem 0 -0.35rem 0.2rem; }
+
+/* ── NAV BAR ── */
+.nav-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; background: var(--bg2); border: 3px solid var(--border); box-shadow: 4px 4px 0 var(--ink); padding: 0.6rem 0.7rem; }
+.nav-btn { width: 40px; height: 40px; border: 3px solid var(--border); background: var(--bg2); font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav-btn:active { background: var(--bg3); }
+.nav-btn.wide { width: 56px; }
+.nav-btn.spacer { visibility: hidden; }
+.nav-label { font-weight: 800; font-size: 1rem; letter-spacing: 0.02em; text-align: center; flex: 1; }
+.nav-tag { display: block; font-size: 0.52rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red-dim); margin-top: 0.15rem; }
+
+/* ── CARD (panel) ── */
+.card { position: relative; width: 100%; background: var(--bg2); border: 3px solid var(--border); padding: 1.1rem 1.1rem 1.15rem; box-shadow: 4px 4px 0 var(--ink); }
+.card::before { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; height: 6px; background: var(--accent, var(--red)); }
+.card-accent-red { --accent: var(--red); }
+.card-accent-blue { --accent: var(--blue); }
+.card-accent-yellow { --accent: var(--yellow); }
+.card-accent-green { --accent: var(--green); }
+.section-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 800; margin-bottom: 0.7rem; }
+.section-title::before { content: ''; width: 10px; height: 10px; background: var(--accent, var(--red)); flex-shrink: 0; }
+
+.field-label { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(26,26,26,0.42); margin-bottom: 0.35rem; }
+
+.text-input, textarea.text-input, select.text-input {
+  width: 100%; font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600;
+  padding: 0.65rem 0.7rem; border: 3px solid var(--border); background: var(--bg2);
+  color: var(--ink); -webkit-user-select: text; user-select: text; appearance: none; -webkit-appearance: none; resize: vertical;
+}
+.text-input:focus { outline: none; border-color: var(--red); }
+.btn {
+  font-family: 'Poppins', sans-serif; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.75rem 0; cursor: pointer; border: 3px solid var(--border); background: var(--bg2); color: var(--ink); width: 100%; text-align: center;
+}
+.btn:active { background: var(--bg3); }
+.btn.btn-primary { background: var(--red); color: #fff; border-color: var(--red); box-shadow: 4px 4px 0 var(--ink); }
+.btn.btn-primary:active { background: var(--red-dim); box-shadow: 1px 1px 0 var(--ink); }
+.btn.btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+.btn.btn-green:active { background: var(--green-dim); }
+.btn-row { display: flex; gap: 0.5rem; }
+.btn-row .btn { flex: 1; }
+.note-text { font-size: 0.62rem; letter-spacing: 0.02em; line-height: 1.5; color: rgba(26,26,26,0.55); text-align: center; margin-top: 0.2rem; }
+
+/* ── SWATCH PICKER — stretched to match the width of the button below ── */
+.swatch-row { display: flex; gap: 0.55rem; width: 100%; }
+.swatch { flex: 1; height: 40px; border: 3px solid var(--border); cursor: pointer; position: relative; min-width: 0; }
+.swatch.sw-red { background: var(--red); } .swatch.sw-blue { background: var(--blue); }
+.swatch.sw-yellow { background: var(--yellow); } .swatch.sw-green { background: var(--green); }
+.swatch.selected::after { content: '\2713'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 1.1rem; text-shadow: 0 0 3px rgba(0,0,0,0.5); }
+.swatch.sw-yellow.selected::after { color: var(--ink); text-shadow: none; }
+
+/* ── FOLDER / GROUP LIST ── */
+.folder-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.folder-row { display: flex; align-items: stretch; background: var(--bg2); border: 3px solid var(--border); box-shadow: 4px 4px 0 var(--ink); cursor: pointer; overflow: hidden; }
+.folder-row:active { box-shadow: 1px 1px 0 var(--ink); }
+.folder-chip { width: 12px; flex-shrink: 0; }
+.folder-body { flex: 1; padding: 0.75rem 0.85rem; min-width: 0; }
+.folder-name { font-weight: 800; font-size: 0.88rem; margin-bottom: 0.15rem; }
+.folder-count { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; color: rgba(26,26,26,0.5); text-transform: uppercase; }
+.folder-del { flex-shrink: 0; align-self: center; width: 30px; height: 30px; margin-right: 0.6rem; border: 2px solid var(--border); background: var(--bg2); font-weight: 800; font-size: 0.85rem; cursor: pointer; }
+.folder-del:active { background: var(--red-tint); border-color: var(--red); color: var(--red-dim); }
+.folder-empty { text-align: center; font-size: 0.72rem; color: rgba(26,26,26,0.45); font-weight: 600; padding: 0.6rem 0; }
+
+.move-group-row { display: flex; align-items: center; gap: 0.6rem; }
+.move-group-row .field-label { margin: 0; white-space: nowrap; }
+.move-group-row select { flex: 1; }
+
+/* ── CARD LIST (inside a folder) ── */
+.card-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.card-row { border: 2px solid var(--border); background: var(--bg3); cursor: pointer; }
+.card-row-view { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.65rem; }
+.card-row-thumb { width: 34px; height: 34px; background: #fff; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.card-row-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.card-row-text { flex: 1; min-width: 0; }
+.card-row-front { font-size: 0.76rem; font-weight: 700; word-break: break-word; }
+.card-row-back { font-size: 0.66rem; font-weight: 600; color: rgba(26,26,26,0.55); word-break: break-word; margin-top: 0.1rem; }
+.card-row-box { flex-shrink: 0; font-size: 0.55rem; font-weight: 800; color: var(--green-dim); background: var(--green-tint); border: 1px solid var(--green-dim); padding: 0.15rem 0.35rem; }
+.card-row-del { flex-shrink: 0; width: 26px; height: 26px; border: 2px solid var(--border); background: var(--bg2); font-weight: 800; font-size: 0.8rem; cursor: pointer; }
+.card-row-del:active { background: var(--red-tint); border-color: var(--red); color: var(--red-dim); }
+.card-row-edit { padding: 0.65rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.card-row-edit-actions { display: flex; gap: 0.5rem; }
+.card-row-edit-actions .btn { flex: 1; }
+.card-list-empty { text-align: center; font-size: 0.72rem; color: rgba(26,26,26,0.45); font-weight: 600; padding: 0.6rem 0; }
+
+/* ── IMAGE PICKER — preview always sits on a white card, since many
+   uploaded images (icons, stickers) have transparent backgrounds ── */
+.image-picker { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
+.image-preview-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.image-preview-wrap .btn { flex: 1; }
+.image-preview-frame { background: #fff; border: 2px solid var(--border); padding: 0.35rem; flex-shrink: 0; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
+.image-preview-frame img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+.study-btn { margin-top: 0; }
+
+/* ── STUDY / FLIP CARD ── */
+.flip-stage { perspective: 1200px; }
+.flip-card { position: relative; width: 100%; height: 280px; cursor: pointer; transition: transform 0.5s cubic-bezier(.4,.2,.2,1); transform-style: preserve-3d; }
+.flip-card.flipped { transform: rotateY(180deg); }
+.flip-face {
+  position: absolute; inset: 0; backface-visibility: hidden; border: 3px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; text-align: center;
+  padding: 1.4rem; box-shadow: 4px 4px 0 var(--ink); background: var(--bg2); overflow: hidden;
+}
+.flip-text { font-weight: 700; font-size: 1.02rem; line-height: 1.35; word-break: break-word; }
+.card-image-frame { background: #fff; border: 2px solid var(--border); padding: 0.5rem; display: flex; align-items: center; justify-content: center; max-width: 92%; }
+.card-image-frame img { max-width: 100%; max-height: 130px; object-fit: contain; display: block; }
+.flip-front-tag, .flip-back-tag {
+  position: absolute; top: 0.6rem; left: 0.7rem; font-size: 0.52rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(26,26,26,0.4);
+}
+.flip-back { transform: rotateY(180deg); background: var(--ink); color: #fff; }
+.flip-back .flip-back-tag { color: rgba(255,255,255,0.4); }
+.flip-known-badge {
+  position: absolute; top: 0.6rem; right: 0.7rem; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--green); color: #fff; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+}
+.study-actions { display: flex; gap: 0.5rem; align-items: stretch; }
+.study-actions .btn { flex: 1; padding: 0.8rem 0; }
+.study-progress-empty { text-align: center; padding: 2rem 0; font-size: 0.8rem; font-weight: 600; color: rgba(26,26,26,0.5); }
+.session-complete { text-align: center; padding: 1.4rem 0; }
+.session-complete .sc-title { font-weight: 800; font-size: 1.05rem; margin-bottom: 0.4rem; }
+.session-complete .sc-sub { font-size: 0.72rem; color: rgba(26,26,26,0.55); font-weight: 600; margin-bottom: 1rem; }
+
+/* ── STATS SCREEN ── */
+.streak-row { display: flex; align-items: center; gap: 1rem; }
+.streak-num { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--red); }
+.streak-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(26,26,26,0.6); line-height: 1.6; }
+.streak-label span { font-size: 0.62rem; color: rgba(26,26,26,0.4); }
+
+.bar-chart { display: flex; align-items: flex-end; gap: 0.5rem; height: 110px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 0.3rem; }
+.bar-fill { width: 100%; background: var(--blue); min-height: 3px; }
+.bar-fill.bar-today { background: var(--red); }
+.bar-count { font-size: 0.55rem; font-weight: 800; color: rgba(26,26,26,0.55); }
+.bar-day { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(26,26,26,0.45); }
+
+.folder-stats { display: flex; flex-direction: column; gap: 0.75rem; }
+.folder-stat-row .fs-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.3rem; }
+.folder-stat-row .fs-name { font-size: 0.74rem; font-weight: 800; }
+.folder-stat-row .fs-pct { font-size: 0.7rem; font-weight: 800; color: var(--green-dim); }
+.folder-stat-row .fs-bar-track { width: 100%; height: 14px; background: var(--bg3); border: 2px solid var(--border); }
+.folder-stat-row .fs-bar-fill { height: 100%; }
+.folder-stat-row .fs-meta { font-size: 0.58rem; font-weight: 700; color: rgba(26,26,26,0.45); margin-top: 0.25rem; }
+.stats-empty { text-align: center; font-size: 0.72rem; color: rgba(26,26,26,0.45); font-weight: 600; padding: 0.6rem 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="label-top"><span class="l-flash">Flash</span><span class="l-cards">Cards</span></div>
+  <div class="label-sub">folders &middot; flip &middot; study</div>
+  <div class="bauhaus-mark"><span class="mark-circle"></span><span class="mark-square"></span><span class="mark-triangle"></span></div>
+</div>
+
+<div class="app-wrap">
+
+  <!-- ══ SCREEN 1 — HOME (groups + ungrouped folders) ══ -->
+  <div class="screen active" id="screen-folders">
+    <button class="btn btn-green" onclick="showScreen('stats')">View Stats</button>
+
+    <div class="section-heading">Groups</div>
+    <div class="folder-list" id="group-list"></div>
+
+    <div class="section-heading">Folders</div>
+    <div class="folder-list" id="home-folder-list"></div>
+
+    <div class="card card-accent-green">
+      <div class="section-title">New Group</div>
+      <input type="text" id="new-group-name" class="text-input" placeholder="Group name" maxlength="40" style="margin-bottom:0.6rem;">
+      <div class="swatch-row" id="new-group-swatches"></div>
+      <button class="btn btn-primary" style="margin-top:0.7rem;" onclick="createGroup()">Create group</button>
+    </div>
+
+    <div class="card card-accent-yellow">
+      <div class="section-title">New Folder</div>
+      <input type="text" id="new-folder-name" class="text-input" placeholder="Folder name" maxlength="40" style="margin-bottom:0.6rem;">
+      <div class="field-label">Group (optional)</div>
+      <select id="new-folder-group" class="text-input" style="margin-bottom:0.6rem;"></select>
+      <div class="swatch-row" id="new-folder-swatches"></div>
+      <button class="btn btn-primary" style="margin-top:0.7rem;" onclick="createFolder()">Create folder</button>
+    </div>
+    <div class="note-text">Groups organize related folders. Tap a folder to open it.</div>
+  </div>
+
+  <!-- ══ SCREEN 2 — GROUP DETAIL ══ -->
+  <div class="screen" id="screen-group">
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="showScreen('folders')">&larr;</button>
+      <div><div class="nav-label" id="group-detail-name">&mdash;</div><span class="nav-tag" id="group-detail-tag">&mdash;</span></div>
+      <button class="nav-btn" onclick="removeGroupAndBack()" title="Delete group">&times;</button>
+    </div>
+    <div class="folder-list" id="group-folder-list"></div>
+    <div class="card card-accent-yellow">
+      <div class="section-title">New Folder Here</div>
+      <input type="text" id="g-new-folder-name" class="text-input" placeholder="Folder name" maxlength="40" style="margin-bottom:0.6rem;">
+      <div class="swatch-row" id="g-new-folder-swatches"></div>
+      <button class="btn btn-primary" style="margin-top:0.7rem;" onclick="createFolderInGroup()">Create folder</button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 3 — FOLDER DETAIL ══ -->
+  <div class="screen" id="screen-folder">
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="showScreen(folderReturnScreen)">&larr;</button>
+      <div>
+        <div class="nav-label" id="folder-detail-name">&mdash;</div>
+        <span class="nav-tag" id="folder-detail-tag">&mdash;</span>
+      </div>
+      <button class="nav-btn" onclick="deleteFolder()" title="Delete folder">&times;</button>
+    </div>
+
+    <div class="card card-accent-green" style="padding:0.8rem 0.9rem;">
+      <div class="move-group-row">
+        <span class="field-label">Group</span>
+        <select id="move-group-select" class="text-input" onchange="moveFolderGroup(this.value)"></select>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="startStudy(false)">Study all</button>
+      <button class="btn" onclick="startStudy(true)">Study weak cards</button>
+    </div>
+
+    <div class="card card-accent-blue">
+      <div class="section-title">Add Card</div>
+      <div class="field-label">Front</div>
+      <textarea id="new-card-front" class="text-input" placeholder="Front text (optional with an image)" rows="2" maxlength="200" style="margin-bottom:0.5rem;"></textarea>
+      <div class="image-picker">
+        <input type="file" accept="image/*" id="new-front-input" style="display:none;" onchange="handleImagePick(event,'new','front')">
+        <button type="button" class="btn" id="new-front-add-btn" onclick="document.getElementById('new-front-input').click()">Add front image</button>
+        <div class="image-preview-wrap" id="new-front-preview" style="display:none;">
+          <div class="image-preview-frame"><img id="new-front-preview-img" alt=""></div>
+          <button type="button" class="btn" onclick="removeImagePick('new','front')">Remove image</button>
+        </div>
+      </div>
+      <div class="field-label">Back</div>
+      <textarea id="new-card-back" class="text-input" placeholder="Back text (optional with an image)" rows="2" maxlength="200" style="margin-bottom:0.5rem;"></textarea>
+      <div class="image-picker">
+        <input type="file" accept="image/*" id="new-back-input" style="display:none;" onchange="handleImagePick(event,'new','back')">
+        <button type="button" class="btn" id="new-back-add-btn" onclick="document.getElementById('new-back-input').click()">Add back image</button>
+        <div class="image-preview-wrap" id="new-back-preview" style="display:none;">
+          <div class="image-preview-frame"><img id="new-back-preview-img" alt=""></div>
+          <button type="button" class="btn" onclick="removeImagePick('new','back')">Remove image</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addCard()">Add card</button>
+    </div>
+
+    <div class="card card-accent-red">
+      <div class="section-title">Cards</div>
+      <div class="card-list" id="card-list"></div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 4 — STUDY MODE ══ -->
+  <div class="screen" id="screen-study">
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="exitStudy()">&larr;</button>
+      <div>
+        <div class="nav-label" id="study-folder-name">&mdash;</div>
+        <span class="nav-tag" id="study-progress">&mdash;</span>
+      </div>
+      <button class="nav-btn" onclick="shuffleStudy()" title="Restart shuffled">&#8635;</button>
+    </div>
+
+    <div id="study-body">
+      <div class="flip-stage">
+        <div class="flip-card" id="flip-card" onclick="flipCard()">
+          <div class="flip-face flip-front">
+            <span class="flip-front-tag">Front</span>
+            <div class="flip-inner" id="flip-front-inner"></div>
+            <span class="flip-known-badge" id="flip-known-badge" style="display:none;">&#10003;</span>
+          </div>
+          <div class="flip-face flip-back">
+            <span class="flip-back-tag">Back</span>
+            <div class="flip-inner" id="flip-back-inner"></div>
+          </div>
+        </div>
+      </div>
+      <div class="note-text">Tap the card to flip it.</div>
+      <div class="study-actions" style="margin-top:0.9rem;">
+        <button class="btn" onclick="recordReview(false)">Skip</button>
+        <button class="btn btn-primary" onclick="recordReview(true)">I got this correct</button>
+      </div>
+      <div class="note-text">Skip brings a card back sooner &middot; correct answers space it out.</div>
+    </div>
+
+    <div id="study-complete" class="session-complete" style="display:none;">
+      <div class="sc-title">Session complete!</div>
+      <div class="sc-sub" id="study-complete-sub"></div>
+      <button class="btn btn-primary" onclick="shuffleStudy()">Study again</button>
+    </div>
+
+    <div class="study-progress-empty" id="study-empty" style="display:none;"></div>
+  </div>
+
+  <!-- ══ SCREEN 5 — STATISTICS ══ -->
+  <div class="screen" id="screen-stats">
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="showScreen('folders')">&larr;</button>
+      <div><div class="nav-label">Statistics</div><span class="nav-tag">Your study activity</span></div>
+      <div class="nav-btn spacer"></div>
+    </div>
+
+    <div class="card card-accent-red">
+      <div class="section-title">Daily Streak</div>
+      <div class="streak-row">
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-label">day streak<br><span id="streak-best">Best: 0</span></div>
+      </div>
+    </div>
+
+    <div class="card card-accent-blue">
+      <div class="section-title">Last 7 Days</div>
+      <div class="bar-chart" id="week-chart"></div>
+    </div>
+
+    <div class="card card-accent-yellow">
+      <div class="section-title">Accuracy by Folder</div>
+      <div class="folder-stats" id="folder-stats-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  AUDIO — a natural click for taps, a whoosh for card flips,
+//  and a soft chime for correct/skip. Re-arms itself whenever
+//  iOS hands the page back after backgrounding it.
+// ══════════════════════════════════════════════════════
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx || audioCtx.state === 'closed') audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function ensureResumed(ctx) { if (ctx.state === 'suspended' || ctx.state === 'interrupted') ctx.resume(); }
+
+let clickNoiseBuffer = null;
+function getClickNoiseBuffer(ctx) {
+  if (!clickNoiseBuffer) {
+    const len = Math.floor(ctx.sampleRate * 0.03);
+    clickNoiseBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = clickNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+  }
+  return clickNoiseBuffer;
+}
+let flipNoiseBuffer = null;
+function getFlipNoiseBuffer(ctx) {
+  if (!flipNoiseBuffer) {
+    const len = Math.floor(ctx.sampleRate * 0.14);
+    flipNoiseBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = flipNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 1.4);
+  }
+  return flipNoiseBuffer;
+}
+function playButtonClickSound() {
+  try {
+    const ctx = getAudioCtx(); ensureResumed(ctx);
+    const now = ctx.currentTime;
+    const noise = ctx.createBufferSource();
+    noise.buffer = getClickNoiseBuffer(ctx);
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass'; bandpass.frequency.setValueAtTime(2600, now); bandpass.Q.value = 0.9;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.5, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.022);
+    noise.connect(bandpass).connect(noiseGain).connect(ctx.destination);
+    noise.start(now); noise.stop(now + 0.03);
+
+    const thock = ctx.createOscillator();
+    const thockGain = ctx.createGain();
+    thock.type = 'sine'; thock.frequency.setValueAtTime(180, now); thock.frequency.exponentialRampToValueAtTime(90, now + 0.02);
+    thockGain.gain.setValueAtTime(0.16, now); thockGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+    thock.connect(thockGain).connect(ctx.destination);
+    thock.start(now); thock.stop(now + 0.03);
+  } catch (e) {}
+}
+function playFlipSound() {
+  try {
+    const ctx = getAudioCtx(); ensureResumed(ctx);
+    const now = ctx.currentTime;
+    const noise = ctx.createBufferSource();
+    noise.buffer = getFlipNoiseBuffer(ctx);
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.setValueAtTime(700, now);
+    bandpass.frequency.exponentialRampToValueAtTime(2800, now + 0.12);
+    bandpass.Q.value = 0.7;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(now); noise.stop(now + 0.16);
+  } catch (e) {}
+}
+function playChime(positive) {
+  try {
+    const ctx = getAudioCtx(); ensureResumed(ctx);
+    const now = ctx.currentTime;
+    const freqs = positive ? [660, 990] : [330, 262];
+    freqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + i * 0.06);
+      gain.gain.setValueAtTime(0.0001, now + i * 0.06);
+      gain.gain.linearRampToValueAtTime(0.14, now + i * 0.06 + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.22);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + i * 0.06); osc.stop(now + i * 0.06 + 0.24);
+    });
+  } catch (e) {}
+}
+document.addEventListener('click', function (e) {
+  if (e.target.closest('.flip-card')) return; // flip has its own sound
+  if (e.target.closest('button, .folder-row, .card-row-view')) playButtonClickSound();
+}, true);
+function resumeAudioIfNeeded() { if (audioCtx) ensureResumed(audioCtx); }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resumeAudioIfNeeded(); });
+window.addEventListener('pageshow', resumeAudioIfNeeded);
+window.addEventListener('focus', resumeAudioIfNeeded);
+document.addEventListener('touchstart', resumeAudioIfNeeded, { passive: true });
+
+function uid() { return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+
+// ══════════════════════════════════════════════════════
+//  IMAGES — resized to a reasonable size and kept as PNG so
+//  transparent backgrounds survive; always displayed on a white card.
+// ══════════════════════════════════════════════════════
+function resizeImageFile(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('bad image'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height) { if (width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; } }
+        else { if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+// imagePickState holds the *effective* image for each picker: 'new:front',
+// 'new:back', or 'edit-<cardId>:front' / 'edit-<cardId>:back'.
+let imagePickState = {};
+function stateKey(prefix, side) { return prefix + ':' + side; }
+async function handleImagePick(event, prefix, side) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  try {
+    const dataUrl = await resizeImageFile(file, 480);
+    imagePickState[stateKey(prefix, side)] = dataUrl;
+    refreshImageControl(prefix, side);
+  } catch (e) {}
+}
+function removeImagePick(prefix, side) {
+  imagePickState[stateKey(prefix, side)] = null;
+  refreshImageControl(prefix, side);
+}
+function refreshImageControl(prefix, side) {
+  const val = imagePickState[stateKey(prefix, side)];
+  const btn = document.getElementById(`${prefix}-${side}-add-btn`);
+  const prev = document.getElementById(`${prefix}-${side}-preview`);
+  const img = document.getElementById(`${prefix}-${side}-preview-img`);
+  if (!btn || !prev || !img) return;
+  if (val) { img.src = val; prev.style.display = 'flex'; btn.style.display = 'none'; }
+  else { prev.style.display = 'none'; btn.style.display = 'block'; }
+}
+function imageControlHTML(prefix, side, displayImg, label) {
+  return `
+    <input type="file" accept="image/*" id="${prefix}-${side}-input" style="display:none;" onchange="handleImagePick(event,'${prefix}','${side}')">
+    <button type="button" class="btn" id="${prefix}-${side}-add-btn" style="display:${displayImg ? 'none' : 'block'};" onclick="document.getElementById('${prefix}-${side}-input').click()">${label}</button>
+    <div class="image-preview-wrap" id="${prefix}-${side}-preview" style="display:${displayImg ? 'flex' : 'none'};">
+      <div class="image-preview-frame"><img id="${prefix}-${side}-preview-img" src="${displayImg || ''}" alt=""></div>
+      <button type="button" class="btn" onclick="removeImagePick('${prefix}','${side}')">Remove image</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  DATA — groups (meta-folders) contain folders, folders contain
+//  cards. Each card has a "box" level 1 (least known) .. 5 (mastered).
+// ══════════════════════════════════════════════════════
+const DATA_KEY = 'flashDeckDataV2';
+const OLD_KEY = 'flashDeckFoldersV1';
+function loadData() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(DATA_KEY));
+    if (raw && Array.isArray(raw.folders)) {
+      raw.folders.forEach(f => { if (f.groupId === undefined) f.groupId = null; f.cards.forEach(c => { if (!c.box) c.box = 1; if (c.frontImage === undefined) c.frontImage = null; if (c.backImage === undefined) c.backImage = null; }); });
+      if (!Array.isArray(raw.groups)) raw.groups = [];
+      return raw;
+    }
+  } catch (e) {}
+  try {
+    const old = JSON.parse(localStorage.getItem(OLD_KEY));
+    if (old && Array.isArray(old)) {
+      old.forEach(f => { f.groupId = null; f.cards.forEach(c => { if (!c.box) c.box = 1; c.frontImage = null; c.backImage = null; }); });
+      return { groups: [], folders: old };
+    }
+  } catch (e) {}
+  return {
+    groups: [],
+    folders: [{
+      id: uid(), name: 'Example \u00b7 Spanish Basics', color: 'blue', groupId: null,
+      cards: [
+        { id: uid(), front: 'Hola', back: 'Hello', box: 1, frontImage: null, backImage: null },
+        { id: uid(), front: 'Gracias', back: 'Thank you', box: 1, frontImage: null, backImage: null },
+        { id: uid(), front: 'Buenos d\u00edas', back: 'Good morning', box: 1, frontImage: null, backImage: null }
+      ]
+    }]
+  };
+}
+function saveData() { try { localStorage.setItem(DATA_KEY, JSON.stringify({ groups, folders })); } catch (e) {} }
+const initialData = loadData();
+let groups = initialData.groups;
+let folders = initialData.folders;
+let activeFolderId = folders.length ? folders[0].id : null;
+let activeGroupId = null;
+let folderReturnScreen = 'folders';
+let editingCardId = null;
+const COLORS = ['red', 'blue', 'yellow', 'green'];
+let newFolderColor = 'red';
+let newGroupColor = 'blue';
+let newFolderInGroupColor = 'red';
+
+function getFolder(id) { return folders.find(f => f.id === id); }
+function getGroup(id) { return groups.find(g => g.id === id); }
+
+// ══════════════════════════════════════════════════════
+//  STATS — daily log, per-folder log, and a day streak.
+// ══════════════════════════════════════════════════════
+const STATS_KEY = 'flashDeckStatsV1';
+function loadStats() {
+  try { const raw = JSON.parse(localStorage.getItem(STATS_KEY)); if (raw) return raw; } catch (e) {}
+  return { dailyLog: {}, folderLog: {}, streak: { lastDate: '', current: 0, best: 0 } };
+}
+function saveStats() { try { localStorage.setItem(STATS_KEY, JSON.stringify(statsData)); } catch (e) {} }
+let statsData = loadStats();
+
+function todayKey() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function dateKeyOffset(n) { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function updateStreak(day) {
+  const s = statsData.streak;
+  if (s.lastDate === day) return;
+  if (s.lastDate) {
+    const diffDays = Math.round((new Date(day + 'T00:00:00') - new Date(s.lastDate + 'T00:00:00')) / 86400000);
+    s.current = diffDays === 1 ? s.current + 1 : 1;
+  } else { s.current = 1; }
+  s.lastDate = day;
+  if (s.current > s.best) s.best = s.current;
+}
+
+// ══════════════════════════════════════════════════════
+//  SWATCH PICKERS
+// ══════════════════════════════════════════════════════
+function renderSwatchPicker(containerId, selectedColor, onPickFnName) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = COLORS.map(c => `<div class="swatch sw-${c}${c === selectedColor ? ' selected' : ''}" onclick="${onPickFnName}('${c}')"></div>`).join('');
+}
+function pickFolderColor(c) { newFolderColor = c; renderSwatchPicker('new-folder-swatches', newFolderColor, 'pickFolderColor'); }
+function pickGroupColor(c) { newGroupColor = c; renderSwatchPicker('new-group-swatches', newGroupColor, 'pickGroupColor'); }
+function pickFolderInGroupColor(c) { newFolderInGroupColor = c; renderSwatchPicker('g-new-folder-swatches', newFolderInGroupColor, 'pickFolderInGroupColor'); }
+
+function populateGroupSelect(selectId, selectedVal) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = `<option value="">No group</option>` + groups.map(g => `<option value="${g.id}">${escapeHTML(g.name)}</option>`).join('');
+  sel.value = selectedVal || '';
+}
+
+// ══════════════════════════════════════════════════════
+//  SCREENS
+// ══════════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'screen-' + name));
+  if (name === 'folders') {
+    renderGroups(); renderFolders();
+    renderSwatchPicker('new-folder-swatches', newFolderColor, 'pickFolderColor');
+    renderSwatchPicker('new-group-swatches', newGroupColor, 'pickGroupColor');
+    populateGroupSelect('new-folder-group');
+  }
+  if (name === 'group') renderGroupDetail();
+  if (name === 'folder') renderFolderDetail();
+  if (name === 'stats') renderStats();
+}
+
+// ══════════════════════════════════════════════════════
+//  GROUPS (meta-folders)
+// ══════════════════════════════════════════════════════
+function renderGroups() {
+  const wrap = document.getElementById('group-list');
+  if (groups.length === 0) { wrap.innerHTML = `<div class="folder-empty">No groups yet &mdash; create one below.</div>`; return; }
+  wrap.innerHTML = groups.map(g => {
+    const gf = folders.filter(f => f.groupId === g.id);
+    const cardCount = gf.reduce((s, f) => s + f.cards.length, 0);
+    return `<div class="folder-row" onclick="openGroup('${g.id}')">
+      <div class="folder-chip" style="background:var(--${g.color});"></div>
+      <div class="folder-body">
+        <div class="folder-name">${escapeHTML(g.name)}</div>
+        <div class="folder-count">${gf.length} folder${gf.length === 1 ? '' : 's'} \u00b7 ${cardCount} card${cardCount === 1 ? '' : 's'}</div>
+      </div>
+      <button class="folder-del" onclick="event.stopPropagation();removeGroup('${g.id}');refreshHome();">&times;</button>
+    </div>`;
+  }).join('');
+}
+function createGroup() {
+  const input = document.getElementById('new-group-name');
+  const name = input.value.trim();
+  if (!name) return;
+  groups.push({ id: uid(), name, color: newGroupColor });
+  saveData();
+  input.value = ''; newGroupColor = 'blue';
+  renderGroups();
+  renderSwatchPicker('new-group-swatches', newGroupColor, 'pickGroupColor');
+  populateGroupSelect('new-folder-group');
+}
+function removeGroup(id) {
+  groups = groups.filter(g => g.id !== id);
+  folders.forEach(f => { if (f.groupId === id) f.groupId = null; });
+  saveData();
+}
+function removeGroupAndBack() { if (activeGroupId) removeGroup(activeGroupId); showScreen('folders'); }
+function openGroup(id) { activeGroupId = id; showScreen('group'); }
+function renderGroupDetail() {
+  const g = getGroup(activeGroupId);
+  if (!g) { showScreen('folders'); return; }
+  document.getElementById('group-detail-name').textContent = g.name;
+  const gf = folders.filter(f => f.groupId === g.id);
+  document.getElementById('group-detail-tag').textContent = `${gf.length} folder${gf.length === 1 ? '' : 's'}`;
+  document.getElementById('group-folder-list').innerHTML = gf.length
+    ? gf.map(f => folderRowHTML(f, true)).join('')
+    : `<div class="folder-empty">No folders here yet. Add one below.</div>`;
+  renderSwatchPicker('g-new-folder-swatches', newFolderInGroupColor, 'pickFolderInGroupColor');
+}
+function createFolderInGroup() {
+  const input = document.getElementById('g-new-folder-name');
+  const name = input.value.trim();
+  if (!name || !activeGroupId) return;
+  folders.push({ id: uid(), name, color: newFolderInGroupColor, groupId: activeGroupId, cards: [] });
+  saveData();
+  input.value = ''; newFolderInGroupColor = 'red';
+  renderGroupDetail();
+}
+
+// ══════════════════════════════════════════════════════
+//  FOLDERS
+// ══════════════════════════════════════════════════════
+function folderRowHTML(f, fromGroup) {
+  return `<div class="folder-row" onclick="openFolder('${f.id}', ${fromGroup ? 'true' : 'false'})">
+    <div class="folder-chip" style="background:var(--${f.color});"></div>
+    <div class="folder-body">
+      <div class="folder-name">${escapeHTML(f.name)}</div>
+      <div class="folder-count">${f.cards.length} card${f.cards.length === 1 ? '' : 's'}</div>
+    </div>
+    <button class="folder-del" onclick="event.stopPropagation();removeFolder('${f.id}');">&times;</button>
+  </div>`;
+}
+function renderFolders() {
+  const ungrouped = folders.filter(f => !f.groupId);
+  document.getElementById('home-folder-list').innerHTML = ungrouped.length
+    ? ungrouped.map(f => folderRowHTML(f, false)).join('')
+    : `<div class="folder-empty">No ungrouped folders.</div>`;
+}
+function refreshHome() { renderGroups(); renderFolders(); }
+function openFolder(id, fromGroup) {
+  activeFolderId = id; editingCardId = null;
+  folderReturnScreen = fromGroup ? 'group' : 'folders';
+  showScreen('folder');
+}
+function createFolder() {
+  const input = document.getElementById('new-folder-name');
+  const name = input.value.trim();
+  if (!name) return;
+  const groupId = document.getElementById('new-folder-group').value || null;
+  folders.push({ id: uid(), name, color: newFolderColor, groupId, cards: [] });
+  saveData();
+  input.value = ''; newFolderColor = 'red';
+  renderFolders(); renderGroups();
+  renderSwatchPicker('new-folder-swatches', newFolderColor, 'pickFolderColor');
+  document.getElementById('new-folder-group').value = '';
+}
+function removeFolder(id) {
+  folders = folders.filter(f => f.id !== id);
+  saveData();
+  refreshHome();
+  if (document.getElementById('screen-group').classList.contains('active')) renderGroupDetail();
+}
+function deleteFolder() {
+  if (!activeFolderId) return;
+  folders = folders.filter(f => f.id !== activeFolderId);
+  saveData();
+  showScreen(folderReturnScreen);
+}
+function moveFolderGroup(val) {
+  const f = getFolder(activeFolderId);
+  if (!f) return;
+  f.groupId = val || null;
+  saveData();
+  renderFolderDetail();
+}
+
+// ══════════════════════════════════════════════════════
+//  FOLDER DETAIL — add / edit / delete cards (with images)
+// ══════════════════════════════════════════════════════
+function renderFolderDetail() {
+  const f = getFolder(activeFolderId);
+  if (!f) { showScreen('folders'); return; }
+  document.getElementById('folder-detail-name').textContent = f.name;
+  document.getElementById('folder-detail-tag').textContent = `${f.cards.length} card${f.cards.length === 1 ? '' : 's'}`;
+  populateGroupSelect('move-group-select', f.groupId || '');
+
+  const list = document.getElementById('card-list');
+  if (f.cards.length === 0) {
+    list.innerHTML = `<div class="card-list-empty">No cards yet. Add your first one above.</div>`;
+    return;
+  }
+  list.innerHTML = f.cards.map(c => {
+    if (c.id === editingCardId) {
+      const fk = `edit-${c.id}`;
+      return `<div class="card-row">
+        <div class="card-row-edit">
+          <div class="field-label">Front</div>
+          <textarea class="text-input" id="edit-front-${c.id}" rows="2">${escapeHTML(c.front)}</textarea>
+          <div class="image-picker">${imageControlHTML(fk, 'front', imagePickState[stateKey(fk, 'front')], 'Add front image')}</div>
+          <div class="field-label">Back</div>
+          <textarea class="text-input" id="edit-back-${c.id}" rows="2">${escapeHTML(c.back)}</textarea>
+          <div class="image-picker">${imageControlHTML(fk, 'back', imagePickState[stateKey(fk, 'back')], 'Add back image')}</div>
+          <div class="card-row-edit-actions">
+            <button class="btn" onclick="cancelEditCard()">Cancel</button>
+            <button class="btn" onclick="deleteCard('${c.id}')">Delete</button>
+            <button class="btn btn-primary" onclick="saveCard('${c.id}')">Save</button>
+          </div>
+        </div>
+      </div>`;
+    }
+    return `<div class="card-row">
+      <div class="card-row-view" onclick="enterEditCard('${c.id}')">
+        ${c.frontImage ? `<div class="card-row-thumb"><img src="${c.frontImage}" alt=""></div>` : ''}
+        <div class="card-row-text">
+          <div class="card-row-front">${escapeHTML(c.front) || '<em>(image only)</em>'}</div>
+          <div class="card-row-back">${escapeHTML(c.back) || '<em>(image only)</em>'}</div>
+        </div>
+        ${c.box >= 5 ? `<span class="card-row-box">mastered</span>` : ''}
+        <button class="card-row-del" onclick="event.stopPropagation();deleteCard('${c.id}')">&times;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function enterEditCard(id) {
+  const f = getFolder(activeFolderId);
+  const c = f && f.cards.find(x => x.id === id);
+  if (!c) return;
+  editingCardId = id;
+  imagePickState[stateKey(`edit-${id}`, 'front')] = c.frontImage || null;
+  imagePickState[stateKey(`edit-${id}`, 'back')] = c.backImage || null;
+  renderFolderDetail();
+}
+function cancelEditCard() { editingCardId = null; renderFolderDetail(); }
+function addCard() {
+  const f = getFolder(activeFolderId);
+  if (!f) return;
+  const front = document.getElementById('new-card-front').value.trim();
+  const back = document.getElementById('new-card-back').value.trim();
+  const frontImage = imagePickState[stateKey('new', 'front')] || null;
+  const backImage = imagePickState[stateKey('new', 'back')] || null;
+  if ((!front && !frontImage) || (!back && !backImage)) return;
+  f.cards.push({ id: uid(), front, back, frontImage, backImage, box: 1 });
+  saveData();
+  document.getElementById('new-card-front').value = '';
+  document.getElementById('new-card-back').value = '';
+  imagePickState[stateKey('new', 'front')] = null;
+  imagePickState[stateKey('new', 'back')] = null;
+  refreshImageControl('new', 'front');
+  refreshImageControl('new', 'back');
+  renderFolderDetail();
+}
+function saveCard(id) {
+  const f = getFolder(activeFolderId);
+  const c = f && f.cards.find(x => x.id === id);
+  if (!c) return;
+  const front = document.getElementById(`edit-front-${id}`).value.trim();
+  const back = document.getElementById(`edit-back-${id}`).value.trim();
+  const fk = `edit-${id}`;
+  c.front = front;
+  c.back = back;
+  c.frontImage = imagePickState[stateKey(fk, 'front')] || null;
+  c.backImage = imagePickState[stateKey(fk, 'back')] || null;
+  delete imagePickState[stateKey(fk, 'front')];
+  delete imagePickState[stateKey(fk, 'back')];
+  editingCardId = null;
+  saveData();
+  renderFolderDetail();
+}
+function deleteCard(id) {
+  const f = getFolder(activeFolderId);
+  if (!f) return;
+  f.cards = f.cards.filter(c => c.id !== id);
+  if (editingCardId === id) editingCardId = null;
+  delete imagePickState[stateKey(`edit-${id}`, 'front')];
+  delete imagePickState[stateKey(`edit-${id}`, 'back')];
+  saveData();
+  renderFolderDetail();
+}
+
+// ══════════════════════════════════════════════════════
+//  STUDY MODE — cards you skip resurface sooner (box goes down);
+//  cards you get correct are spaced further out (box goes up, 1-5).
+//  "Study weak cards" studies only cards with box <= 2.
+// ══════════════════════════════════════════════════════
+let studyOrder = [];
+let studyIndex = 0;
+let studyFlipped = false;
+let sessionCorrect = 0;
+let sessionSkip = 0;
+let studyWeakOnly = false;
+let studyPoolSize = 0;
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function buildWeightedOrder(cards) {
+  let list = [];
+  cards.forEach(c => { const weight = Math.max(1, 4 - Math.min(c.box || 1, 4)); for (let i = 0; i < weight; i++) list.push(c.id); });
+  return shuffleArray(list);
+}
+function weakPool(f) { return f.cards.filter(c => (c.box || 1) <= 2); }
+function startStudy(weakOnly) {
+  const f = getFolder(activeFolderId);
+  studyWeakOnly = !!weakOnly;
+  const pool = f ? (studyWeakOnly ? weakPool(f) : f.cards.slice()) : [];
+  studyPoolSize = pool.length;
+  studyOrder = buildWeightedOrder(pool);
+  studyIndex = 0; studyFlipped = false; sessionCorrect = 0; sessionSkip = 0;
+  showScreen('study');
+  renderStudy();
+}
+function shuffleStudy() {
+  const f = getFolder(activeFolderId);
+  const pool = f ? (studyWeakOnly ? weakPool(f) : f.cards.slice()) : [];
+  studyPoolSize = pool.length;
+  studyOrder = buildWeightedOrder(pool);
+  studyIndex = 0; studyFlipped = false; sessionCorrect = 0; sessionSkip = 0;
+  renderStudy();
+}
+function exitStudy() { showScreen('folder'); }
+function currentStudyCard() {
+  const f = getFolder(activeFolderId);
+  if (!f || studyIndex >= studyOrder.length) return null;
+  const id = studyOrder[studyIndex];
+  return f.cards.find(c => c.id === id) || null;
+}
+function buildFaceHTML(text, image) {
+  let html = '';
+  if (image) html += `<div class="card-image-frame"><img src="${image}" alt=""></div>`;
+  if (text) html += `<div class="flip-text">${escapeHTML(text)}</div>`;
+  return html;
+}
+function renderStudy() {
+  const f = getFolder(activeFolderId);
+  document.getElementById('study-folder-name').textContent = f ? (f.name + (studyWeakOnly ? ' \u00b7 Weak' : '')) : '\u2014';
+  const noCards = !f || studyPoolSize === 0;
+  const done = !noCards && studyIndex >= studyOrder.length;
+
+  document.getElementById('study-empty').style.display = noCards ? 'block' : 'none';
+  document.getElementById('study-empty').textContent = studyWeakOnly
+    ? 'No weak cards right now \u2014 nice work!'
+    : 'This folder has no cards yet \u2014 add some first.';
+  document.getElementById('study-body').style.display = (!noCards && !done) ? 'block' : 'none';
+  document.getElementById('study-complete').style.display = done ? 'block' : 'none';
+
+  if (noCards) { document.getElementById('study-progress').textContent = '0 / 0'; return; }
+  if (done) {
+    document.getElementById('study-progress').textContent = 'Done';
+    document.getElementById('study-complete-sub').textContent = `${sessionCorrect} correct \u00b7 ${sessionSkip} skipped`;
+    return;
+  }
+
+  if (studyWeakOnly) {
+    document.getElementById('study-progress').textContent = `${studyIndex + 1} / ${studyOrder.length} \u00b7 weak cards`;
+  } else {
+    const masteredCount = f.cards.filter(c => c.box >= 5).length;
+    document.getElementById('study-progress').textContent = `${studyIndex + 1} / ${studyOrder.length} \u00b7 ${masteredCount}/${f.cards.length} mastered`;
+  }
+  const c = currentStudyCard();
+  document.getElementById('flip-front-inner').innerHTML = c ? buildFaceHTML(c.front, c.frontImage) : '';
+  document.getElementById('flip-back-inner').innerHTML = c ? buildFaceHTML(c.back, c.backImage) : '';
+  document.getElementById('flip-card').classList.toggle('flipped', studyFlipped);
+  document.getElementById('flip-known-badge').style.display = (c && c.box >= 5) ? 'flex' : 'none';
+}
+function flipCard() {
+  if (!currentStudyCard()) return;
+  studyFlipped = !studyFlipped; playFlipSound(); renderStudy();
+}
+function recordReview(known) {
+  const c = currentStudyCard();
+  if (!c) return;
+  const day = todayKey();
+  if (!statsData.dailyLog[day]) statsData.dailyLog[day] = { correct: 0, skip: 0 };
+  if (!statsData.folderLog[activeFolderId]) statsData.folderLog[activeFolderId] = { correct: 0, skip: 0 };
+
+  if (known) {
+    c.box = Math.min(5, (c.box || 1) + 1);
+    sessionCorrect++;
+    statsData.dailyLog[day].correct++;
+    statsData.folderLog[activeFolderId].correct++;
+    if (c.box < 5) {
+      const pos = Math.min(studyOrder.length, studyIndex + 6 + Math.floor(Math.random() * 4));
+      studyOrder.splice(pos, 0, c.id);
+    }
+  } else {
+    c.box = Math.max(1, (c.box || 1) - 1);
+    sessionSkip++;
+    statsData.dailyLog[day].skip++;
+    statsData.folderLog[activeFolderId].skip++;
+    const pos = Math.min(studyOrder.length, studyIndex + 2 + Math.floor(Math.random() * 2));
+    studyOrder.splice(pos, 0, c.id);
+  }
+  updateStreak(day);
+  saveData();
+  saveStats();
+  playChime(known);
+  studyIndex++;
+  studyFlipped = false;
+  renderStudy();
+}
+
+// ══════════════════════════════════════════════════════
+//  STATISTICS SCREEN
+// ══════════════════════════════════════════════════════
+function renderStats() {
+  document.getElementById('streak-num').textContent = statsData.streak.current || 0;
+  document.getElementById('streak-best').textContent = `Best: ${statsData.streak.best || 0}`;
+
+  const days = [];
+  for (let i = 6; i >= 0; i--) days.push(dateKeyOffset(-i));
+  const counts = days.map(d => { const l = statsData.dailyLog[d]; return l ? l.correct + l.skip : 0; });
+  const max = Math.max(1, ...counts);
+  const today = todayKey();
+  document.getElementById('week-chart').innerHTML = days.map((d, i) => {
+    const h = Math.round((counts[i] / max) * 90) + (counts[i] > 0 ? 6 : 0);
+    const wd = new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 2);
+    return `<div class="bar-col">
+      <div class="bar-count">${counts[i] || ''}</div>
+      <div class="bar-fill${d === today ? ' bar-today' : ''}" style="height:${h}px;"></div>
+      <div class="bar-day">${wd}</div>
+    </div>`;
+  }).join('');
+
+  const flist = document.getElementById('folder-stats-list');
+  if (folders.length === 0) {
+    flist.innerHTML = `<div class="stats-empty">No folders yet.</div>`;
+  } else {
+    flist.innerHTML = folders.map(f => {
+      const log = statsData.folderLog[f.id] || { correct: 0, skip: 0 };
+      const total = log.correct + log.skip;
+      const pct = total ? Math.round((log.correct / total) * 100) : 0;
+      return `<div class="folder-stat-row">
+        <div class="fs-head"><span class="fs-name">${escapeHTML(f.name)}</span><span class="fs-pct">${total ? pct + '%' : '\u2014'}</span></div>
+        <div class="fs-bar-track"><div class="fs-bar-fill" style="width:${pct}%;background:var(--${f.color});"></div></div>
+        <div class="fs-meta">${log.correct} correct \u00b7 ${log.skip} skipped</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+showScreen('folders');
+</script>
+</body>
+</html>
